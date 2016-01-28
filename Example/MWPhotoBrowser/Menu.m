@@ -23,6 +23,9 @@
         // Clear cache for testing
         [[SDImageCache sharedImageCache] clearDisk];
         [[SDImageCache sharedImageCache] clearMemory];
+        [[NSFileManager defaultManager]
+         removeItemAtPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"MWLivePhotos"]
+         error:nil];
         
         _segmentedControl = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"Push", @"Modal", nil]];
         _segmentedControl.selectedSegmentIndex = 0;
@@ -85,7 +88,7 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    NSInteger rows = 9;
+    NSInteger rows = 10;
     @synchronized(_assets) {
         if (_assets.count) rows++;
     }
@@ -150,6 +153,11 @@
             break;
         }
 		case 9: {
+            cell.textLabel.text = @"Live Photos";
+            cell.detailTextLabel.text = @"with preview and icon";
+            break;
+        }
+        case 10: {
             cell.textLabel.text = @"Library photos and videos";
             cell.detailTextLabel.text = @"media from device library";
             break;
@@ -1077,6 +1085,50 @@
             break;
         }
 		case 9: {
+            
+            // Add a Live Photo
+            
+            NSURL *movieURL = [NSURL URLWithString:
+                               @"http://s3.amazonaws.com/kekanto_pics/live_pics/18/18.mov"];
+            NSURL *imageURL = [NSURL URLWithString:
+                               @"http://s3.amazonaws.com/kekanto_pics/live_pics/18/18.jpg"];
+            photo = [MWPhoto photoWithLivePhotoImageURL:imageURL movieURL:movieURL];
+            photo.caption = @"A cool live photo";
+            [photos addObject:photo];
+            
+            // Photos
+            photo = [MWPhoto photoWithImage:[UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"photo5" ofType:@"jpg"]]];
+            photo.caption = @"White Tower";
+            [photos addObject:photo];
+            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo2" ofType:@"jpg"]]];
+            photo.caption = @"The London Eye is a giant Ferris wheel situated on the banks of the River Thames, in London, England.";
+            [photos addObject:photo];
+            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo3" ofType:@"jpg"]]];
+            photo.caption = @"York Floods";
+            [photos addObject:photo];
+            photo = [MWPhoto photoWithImage:[UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"photo4" ofType:@"jpg"]]];
+            photo.caption = @"Campervan";
+            [photos addObject:photo];
+            
+            // Thumbs
+            photo = [MWPhoto photoWithURL:[NSURL URLWithString:@"http://1.kekantoimg.com/gLCeuc30NKTAv-_2koBl1A361Qc=/100x100/s3.amazonaws.com/kekanto_pics/pics/965/1665965.jpg"]];
+            [thumbs addObject:photo];
+            photo = [MWPhoto photoWithImage:[UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"photo5t" ofType:@"jpg"]]];
+            [thumbs addObject:photo];
+            photo = [MWPhoto photoWithImage:[UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"photo2t" ofType:@"jpg"]]];
+            [thumbs addObject:photo];
+            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo3t" ofType:@"jpg"]]];
+            [thumbs addObject:photo];
+            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo4t" ofType:@"jpg"]]];
+            [thumbs addObject:photo];
+            
+            // Options
+            enableGrid = YES;
+            displayNavArrows = YES;
+            break;
+        }
+        case 10: {
+            
             @synchronized(_assets) {
                 NSMutableArray *copy = [_assets copy];
                 if (NSClassFromString(@"PHAsset")) {
@@ -1105,7 +1157,7 @@
                     }
                 }
             }
-			break;
+            break;
         }
 		default: break;
 	}

@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <PhotosUI/PhotosUI.h>
 
 // Notifications
 #define MWPHOTO_LOADING_DID_END_NOTIFICATION @"MWPHOTO_LOADING_DID_END_NOTIFICATION"
@@ -32,7 +33,7 @@
 // methods returns nil.
 @property (nonatomic, strong) UIImage *underlyingImage;
 
-// Called when the browser has determined the underlying images is not
+// Called when the browser has determined the underlying image is not
 // already loaded into memory but needs it.
 - (void)loadUnderlyingImageAndNotify;
 
@@ -53,6 +54,14 @@
 - (void)unloadUnderlyingImage;
 
 @optional
+
+// Live photos support
+
+@property (nonatomic) BOOL isLivePhoto;
+@property (nonatomic) PHLivePhoto *underlyingLivePhoto;
+- (void)loadUnderlyingLivePhotoAndNotify;
+- (void)performLoadUnderlyingLivePhotoAndNotify;
+- (void)unloadUnderlyingLivePhoto;
 
 // If photo is empty, in which case, don't show loading error icons
 @property (nonatomic) BOOL emptyImage;

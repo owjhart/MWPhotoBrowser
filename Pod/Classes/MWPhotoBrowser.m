@@ -80,6 +80,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     _thumbPhotos = [[NSMutableArray alloc] init];
     _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
     _didSavePreviousStateOfNavBar = NO;
+    _previewLivePhotos = YES;
+    _showLivePhotoIcon = YES;
     self.automaticallyAdjustsScrollViewInsets = NO;
     
     // Listen for MWPhoto notifications
@@ -102,12 +104,16 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     // Create a copy in case this array is modified while we are looping through
     // Release photos
     NSArray *copy = [_photos copy];
-    for (id p in copy) {
+    for (id<MWPhoto> p in copy) {
         if (p != [NSNull null]) {
             if (preserveCurrent && p == [self photoAtIndex:self.currentIndex]) {
                 continue; // skip current
             }
-            [p unloadUnderlyingImage];
+            if (p.isLivePhoto) {
+                [p unloadUnderlyingLivePhoto];
+            } else {
+                [p unloadUnderlyingImage];
+            }
         }
     }
     // Release thumbs
@@ -714,6 +720,17 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	return nil;
 }
 
+- (PHLivePhoto *)livePhotoForPhoto:(id<MWPhoto>)photo {
+    if (photo) {
+        if (photo.underlyingLivePhoto) {
+            return photo.underlyingLivePhoto;
+        } else {
+            [photo loadUnderlyingLivePhotoAndNotify];
+        }
+    }
+    return nil;
+}
+
 - (void)loadAdjacentPhotosIfNecessary:(id<MWPhoto>)photo {
     MWZoomingScrollView *page = [self pageDisplayingPhoto:photo];
     if (page) {
@@ -745,13 +762,23 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)handleMWPhotoLoadingDidEndNotification:(NSNotification *)notification {
     id <MWPhoto> photo = [notification object];
     MWZoomingScrollView *page = [self pageDisplayingPhoto:photo];
-    if (page) {
+    
+    if (page == nil) {
+        return;
+    }
+    if (photo.isLivePhoto) {
+        if ([photo underlyingLivePhoto]) {
+            [page displayLivePhoto];
+            [self loadAdjacentPhotosIfNecessary:photo];
+        } else {
+            [page displayImageFailure];
+        }
+    } else {
         if ([photo underlyingImage]) {
             // Successful load
             [page displayImage];
             [self loadAdjacentPhotosIfNecessary:photo];
         } else {
-            
             // Failed to load
             [page displayImageFailure];
         }
@@ -801,6 +828,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 			MWZoomingScrollView *page = [self dequeueRecycledPage];
 			if (!page) {
 				page = [[MWZoomingScrollView alloc] initWithPhotoBrowser:self];
+                page.previewLivePhotos = self.previewLivePhotos;
+                page.showLivePhotoIcon = self.showLivePhotoIcon;
 			}
 			[_visiblePages addObject:page];
 			[self configurePage:page forIndex:index];
@@ -1103,7 +1132,10 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     
     // Disable action button if there is no image or it's a video
     MWPhoto *photo = [self photoAtIndex:_currentPageIndex];
-    if ([photo underlyingImage] == nil || ([photo respondsToSelector:@selector(isVideo)] && photo.isVideo)) {
+    
+    if (photo.underlyingLivePhoto == nil
+        || photo.underlyingImage == nil
+        || ([photo respondsToSelector:@selector(isVideo)] && photo.isVideo)) {
         _actionButton.enabled = NO;
         _actionButton.tintColor = [UIColor clearColor]; // Tint to hide button
     } else {

@@ -12,8 +12,9 @@
 #import <AssetsLibrary/AssetsLibrary.h>
 #import "MWPhoto.h"
 #import "MWPhotoBrowser.h"
+#import "MWLivePhotoManager.h"
 
-@interface MWPhoto () {
+@interface MWPhoto () <NSURLSessionDownloadDelegate> {
 
     BOOL _loadingInProgress;
     id <SDWebImageOperation> _webImageOperation;
@@ -26,14 +27,18 @@
 @property (nonatomic, strong) PHAsset *asset;
 @property (nonatomic) CGSize assetTargetSize;
 
+// Live photos management
+@property (nonatomic) PHLivePhoto *livePhoto;
+@property (nonatomic) NSURL *livePhotoImageWebURL;
+@property (nonatomic) NSURL *livePhotoMovieWebURL;
+
 - (void)imageLoadingComplete;
 
 @end
 
 @implementation MWPhoto
 
-@synthesize underlyingImage = _underlyingImage; // synth property from protocol
-
+//--------------------------------------------------------------------------------------------------
 #pragma mark - Class Methods
 
 + (MWPhoto *)photoWithImage:(UIImage *)image {
@@ -52,6 +57,11 @@
     return [[MWPhoto alloc] initWithVideoURL:url];
 }
 
++ (MWPhoto *)photoWithLivePhotoImageURL:(NSURL *)imageURL movieURL:(NSURL *)movieURL {
+    return [[MWPhoto alloc] initWithLivePhotoImageURL:imageURL movieURL:movieURL];
+}
+
+//--------------------------------------------------------------------------------------------------
 #pragma mark - Init
 
 - (id)init {
@@ -93,6 +103,16 @@
     return self;
 }
 
+- (id)initWithLivePhotoImageURL:(NSURL *)imageURL movieURL:(NSURL *)movieURL {
+    if (self = [super init]) {
+        self.isLivePhoto = YES;
+        self.livePhotoImageWebURL = imageURL;
+        self.livePhotoMovieWebURL = movieURL;
+    }
+    return self;
+}
+
+//--------------------------------------------------------------------------------------------------
 #pragma mark - Video
 
 - (void)setVideoURL:(NSURL *)videoURL {
@@ -117,11 +137,8 @@
     return completion(nil);
 }
 
+//--------------------------------------------------------------------------------------------------
 #pragma mark - MWPhoto Protocol Methods
-
-- (UIImage *)underlyingImage {
-    return _underlyingImage;
-}
 
 - (void)loadUnderlyingImageAndNotify {
     NSAssert([[NSThread currentThread] isMainThread], @"This method must be called on the main thread.");
@@ -186,31 +203,78 @@
     }
 }
 
+//--------------------------------------------------------------------------------------------------
+#pragma mark - MWPhoto protocol methods for Live Photos
+
+- (void)loadUnderlyingLivePhotoAndNotify {
+    
+    BOOL isMainThread = [[NSThread currentThread] isMainThread];
+    NSAssert(isMainThread, @"This method must be called on the main thread.");
+    
+    if (_loadingInProgress) {
+        return;
+    }
+    
+    _loadingInProgress = YES;
+    
+    @try {
+        if (self.underlyingLivePhoto) {
+            [self livePhotoLoadingComplete];
+        } else {
+            [self performLoadUnderlyingLivePhotoAndNotify];
+        }
+    }
+    @catch (NSException *exception) {
+        self.underlyingLivePhoto = nil;
+        _loadingInProgress = NO;
+        [self livePhotoLoadingComplete];
+    }
+    @finally {
+        
+    }
+}
+
+- (void)performLoadUnderlyingLivePhotoAndNotify {
+    if (self.livePhoto) {
+        self.underlyingLivePhoto = self.livePhoto;
+        [self livePhotoLoadingComplete];
+    } else if (self.livePhotoImageWebURL && self.livePhotoMovieWebURL) {
+        [self
+         _performLoadUnderlyingLivePhotoAndNotifyWithImageURL:self.livePhotoImageWebURL
+         movieURL:self.livePhotoMovieWebURL];
+    }
+}
+
+//--------------------------------------------------------------------------------------------------
+#pragma mark - Utils
+
 // Load from local file
 - (void)_performLoadUnderlyingImageAndNotifyWithWebURL:(NSURL *)url {
     @try {
         SDWebImageManager *manager = [SDWebImageManager sharedManager];
-        _webImageOperation = [manager downloadImageWithURL:url
-                                                   options:0
-                                                  progress:^(NSInteger receivedSize, NSInteger expectedSize) {
-                                                      if (expectedSize > 0) {
-                                                          float progress = receivedSize / (float)expectedSize;
-                                                          NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:
-                                                                                [NSNumber numberWithFloat:progress], @"progress",
-                                                                                self, @"photo", nil];
-                                                          [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_PROGRESS_NOTIFICATION object:dict];
-                                                      }
-                                                  }
-                                                 completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
-                                                     if (error) {
-                                                         MWLog(@"SDWebImage failed to download image: %@", error);
-                                                     }
-                                                     _webImageOperation = nil;
-                                                     self.underlyingImage = image;
-                                                     dispatch_async(dispatch_get_main_queue(), ^{
-                                                         [self imageLoadingComplete];
-                                                     });
-                                                 }];
+        _webImageOperation =
+        [manager
+         downloadImageWithURL:url
+         options:0
+         progress:^(NSInteger receivedSize, NSInteger expectedSize) {
+             if (expectedSize > 0) {
+                 float progress = receivedSize / (float)expectedSize;
+                 NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:
+                                       [NSNumber numberWithFloat:progress], @"progress",
+                                       self, @"photo", nil];
+                 [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_PROGRESS_NOTIFICATION object:dict];
+             }
+         }
+         completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+             if (error) {
+                 MWLog(@"SDWebImage failed to download image: %@", error);
+             }
+             _webImageOperation = nil;
+             self.underlyingImage = image;
+             dispatch_async(dispatch_get_main_queue(), ^{
+                 [self imageLoadingComplete];
+             });
+         }];
     } @catch (NSException *e) {
         MWLog(@"Photo from web: %@", e);
         _webImageOperation = nil;
@@ -288,10 +352,44 @@
 
 }
 
+- (void)_performLoadUnderlyingLivePhotoAndNotifyWithImageURL:(NSURL *)imageURL movieURL:(NSURL *)movieURL {
+    
+    if (!imageURL || !movieURL) {
+        MWLog(@"Error: URLs must have one movie and one image URLs.");
+        return;
+    }
+    
+    [[MWLivePhotoManager sharedManager]
+     livePhotoWithImageURL:imageURL
+     movieURL:movieURL
+     progress:^(NSInteger receivedBytes, NSInteger expectedBytes) {
+         
+         CGFloat progress = (CGFloat)receivedBytes / (CGFloat)expectedBytes;
+         
+         [[NSNotificationCenter defaultCenter]
+          postNotificationName:MWPHOTO_PROGRESS_NOTIFICATION
+          object:@{
+              @"progress": @(progress),
+              @"photo": self
+          }];
+     }
+     completion:^(PHLivePhoto *livePhoto, NSError *error) {
+         
+         self.underlyingLivePhoto = livePhoto;
+         [self livePhotoLoadingComplete];
+         
+     }];
+}
+
 // Release if we can get it again from path or url
 - (void)unloadUnderlyingImage {
     _loadingInProgress = NO;
 	self.underlyingImage = nil;
+}
+
+- (void)unloadUnderlyingLivePhoto {
+    _loadingInProgress = NO;
+    self.underlyingLivePhoto = nil;
 }
 
 - (void)imageLoadingComplete {
@@ -302,13 +400,24 @@
     [self performSelector:@selector(postCompleteNotification) withObject:nil afterDelay:0];
 }
 
+- (void)livePhotoLoadingComplete {
+    NSAssert([[NSThread currentThread] isMainThread], @"This method must be called on the main thread.");
+    
+    _loadingInProgress = NO;
+    [self performSelector:@selector(postCompleteNotification) withObject:nil afterDelay:0];
+}
+
 - (void)postCompleteNotification {
     [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_LOADING_DID_END_NOTIFICATION
                                                         object:self];
 }
 
 - (void)cancelAnyLoading {
-    if (_webImageOperation != nil) {
+    if (self.isLivePhoto) {
+        [[MWLivePhotoManager sharedManager] cancelAnyLoading];
+        _loadingInProgress = NO;
+    }
+    else if (_webImageOperation != nil) {
         [_webImageOperation cancel];
         _loadingInProgress = NO;
     } else if (_assetRequestID != PHInvalidImageRequestID) {
