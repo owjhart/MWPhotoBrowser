@@ -17,18 +17,18 @@
 
 @interface MWLivePhotoManager () <NSURLSessionDownloadDelegate>
 
-@property (nonatomic) NSURLSession *imageSession;
-@property (nonatomic) NSURLSession *movieSession;
-@property (nonatomic) int64_t imageReceivedBytes;
-@property (nonatomic) int64_t movieReceivedBytes;
-@property (nonatomic) int64_t imageExpectedBytes;
-@property (nonatomic) int64_t movieExpectedBytes;
-@property (nonatomic) NSURL *imageFileURL;
-@property (nonatomic) NSURL *movieFileURL;
-@property (nonatomic) BOOL didDownloadImage;
-@property (nonatomic) BOOL didDownloadMovie;
-@property (nonatomic) MWLivePhotoManagerCompletionBlock completion;
-@property (nonatomic) MWLivePhotoManagerProgressBlock progress;
+@property (nonatomic, strong) NSURLSession *imageSession;
+@property (nonatomic, strong) NSURLSession *movieSession;
+@property (nonatomic, assign) int64_t imageReceivedBytes;
+@property (nonatomic, assign) int64_t movieReceivedBytes;
+@property (nonatomic, assign) int64_t imageExpectedBytes;
+@property (nonatomic, assign) int64_t movieExpectedBytes;
+@property (nonatomic, strong) NSURL *imageFileURL;
+@property (nonatomic, strong) NSURL *movieFileURL;
+@property (nonatomic, assign) BOOL didDownloadImage;
+@property (nonatomic, assign) BOOL didDownloadMovie;
+@property (nonatomic, strong) MWLivePhotoManagerCompletionBlock completion;
+@property (nonatomic, strong) MWLivePhotoManagerProgressBlock progress;
 
 @end
 
