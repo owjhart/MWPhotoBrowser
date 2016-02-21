@@ -74,9 +74,7 @@ totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
     if (!self.progress) {
         return;
     }
-    
-    CGFloat currentProgress = (CGFloat)totalBytesWritten / (CGFloat)totalBytesExpectedToWrite;
-    
+	
     if (session == self.imageSession) {
         self.imageReceivedBytes = totalBytesWritten;
         self.imageExpectedBytes = totalBytesExpectedToWrite;

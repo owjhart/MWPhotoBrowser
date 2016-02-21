@@ -35,6 +35,5 @@
 - (void)setMaxMinZoomScalesForCurrentBounds;
 - (void)prepareForReuse;
 - (BOOL)displayingVideo;
-- (void)setImageHidden:(BOOL)hidden;
 
 @end
