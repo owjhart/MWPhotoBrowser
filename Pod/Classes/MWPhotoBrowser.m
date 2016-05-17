@@ -1104,19 +1104,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     
 	// Title
     NSUInteger numberOfPhotos = [self numberOfPhotos];
-    if (_gridController) {
-        if (_gridController.selectionMode) {
-            self.title = NSLocalizedString(@"Select Photos", nil);
-        } else {
-            NSString *photosText;
-            if (numberOfPhotos == 1) {
-                photosText = NSLocalizedString(@"photo", @"Used in the context: '1 photo'");
-            } else {
-                photosText = NSLocalizedString(@"photos", @"Used in the context: '3 photos'");
-            }
-            self.title = [NSString stringWithFormat:@"%lu %@", (unsigned long)numberOfPhotos, photosText];
-        }
-    } else if (numberOfPhotos > 1) {
+    if (numberOfPhotos > 1) {
         if ([_delegate respondsToSelector:@selector(photoBrowser:titleForPhotoAtIndex:)]) {
             self.title = [_delegate photoBrowser:self titleForPhotoAtIndex:_currentPageIndex];
         } else {
@@ -1307,98 +1295,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     }
 }
 
-#pragma mark - Grid
-
-- (void)showGridAnimated {
-    [self showGrid:YES];
-}
-
-- (void)showGrid:(BOOL)animated {
-
-    if (_gridController) return;
-    
-    // Init grid controller
-    _gridController = [[MWGridViewController alloc] init];
-    _gridController.initialContentOffset = _currentGridContentOffset;
-    _gridController.browser = self;
-    _gridController.selectionMode = _displaySelectionButtons;
-    _gridController.view.frame = self.view.bounds;
-    _gridController.view.frame = CGRectOffset(_gridController.view.frame, 0, (self.startOnGrid ? -1 : 1) * self.view.bounds.size.height);
-
-    // Stop specific layout being triggered
-    _skipNextPagingScrollViewPositioning = YES;
-    
-    // Add as a child view controller
-    [self addChildViewController:_gridController];
-    [self.view addSubview:_gridController.view];
-    
-    // Perform any adjustments
-    [_gridController.view layoutIfNeeded];
-    [_gridController adjustOffsetsAsRequired];
-    
-    // Hide action button on nav bar if it exists
-    if (self.navigationItem.rightBarButtonItem == _actionButton) {
-        _gridPreviousRightNavItem = _actionButton;
-        [self.navigationItem setRightBarButtonItem:nil animated:YES];
-    } else {
-        _gridPreviousRightNavItem = nil;
-    }
-    
-    // Update
-    [self updateNavigation];
-    [self setControlsHidden:NO animated:YES permanent:YES];
-    
-    // Animate grid in and photo scroller out
-    [_gridController willMoveToParentViewController:self];
-    [UIView animateWithDuration:animated ? 0.3 : 0 animations:^(void) {
-        _gridController.view.frame = self.view.bounds;
-        CGRect newPagingFrame = [self frameForPagingScrollView];
-        newPagingFrame = CGRectOffset(newPagingFrame, 0, (self.startOnGrid ? 1 : -1) * newPagingFrame.size.height);
-        _pagingScrollView.frame = newPagingFrame;
-    } completion:^(BOOL finished) {
-        [_gridController didMoveToParentViewController:self];
-    }];
-    
-}
-
-- (void)hideGrid {
-    
-    if (!_gridController) return;
-    
-    // Remember previous content offset
-    _currentGridContentOffset = _gridController.collectionView.contentOffset;
-    
-    // Restore action button if it was removed
-    if (_gridPreviousRightNavItem == _actionButton && _actionButton) {
-        [self.navigationItem setRightBarButtonItem:_gridPreviousRightNavItem animated:YES];
-    }
-    
-    // Position prior to hide animation
-    CGRect newPagingFrame = [self frameForPagingScrollView];
-    newPagingFrame = CGRectOffset(newPagingFrame, 0, (self.startOnGrid ? 1 : -1) * newPagingFrame.size.height);
-    _pagingScrollView.frame = newPagingFrame;
-    
-    // Remember and remove controller now so things can detect a nil grid controller
-    MWGridViewController *tmpGridController = _gridController;
-    _gridController = nil;
-    
-    // Update
-    [self updateNavigation];
-    [self updateVisiblePageStates];
-    
-    // Animate, hide grid and show paging scroll view
-    [UIView animateWithDuration:0.3 animations:^{
-        tmpGridController.view.frame = CGRectOffset(self.view.bounds, 0, (self.startOnGrid ? -1 : 1) * self.view.bounds.size.height);
-        _pagingScrollView.frame = [self frameForPagingScrollView];
-    } completion:^(BOOL finished) {
-        [tmpGridController willMoveToParentViewController:nil];
-        [tmpGridController.view removeFromSuperview];
-        [tmpGridController removeFromParentViewController];
-        [self setControlsHidden:NO animated:YES permanent:NO]; // retrigger timer
-    }];
-
-}
-
 #pragma mark - Control Hiding / Showing
 
 // If permanent then we don't set timers to hide again
@@ -1406,7 +1302,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)setControlsHidden:(BOOL)hidden animated:(BOOL)animated permanent:(BOOL)permanent {
     
     // Force visible
-    if (![self numberOfPhotos] || _gridController || _alwaysShowControls)
+    if (![self numberOfPhotos] || _alwaysShowControls)
         hidden = NO;
     
     // Cancel any timers
@@ -1561,16 +1457,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)doneButtonPressed:(id)sender {
     // Only if we're modal and there's a done button
     if (_doneButton) {
-        // See if we actually just want to show/hide grid
-        if (self.enableGrid) {
-            if (self.startOnGrid && !_gridController) {
-                [self showGrid:YES];
-                return;
-            } else if (!self.startOnGrid && _gridController) {
-                [self hideGrid];
-                return;
-            }
-        }
         // Dismiss view controller
         if ([_delegate respondsToSelector:@selector(photoBrowserDidFinishModalPresentation:)]) {
             // Call delegate method and let them dismiss us

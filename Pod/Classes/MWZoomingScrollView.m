@@ -22,7 +22,6 @@
 	MWTapDetectingView *_tapView; // for background taps
 	MWTapDetectingImageView *_photoImageView;
     MWTapDetectingLivePhotoView *_livePhotoView;
-	DACircularProgressView *_loadingIndicator;
     UIImageView *_loadingError;
     UIImageView *_livePhotoBadge;
 }
@@ -72,22 +71,7 @@
         );
         _livePhotoBadge.translatesAutoresizingMaskIntoConstraints = NO;
         [self addSubview:_livePhotoBadge];
-		
-		// Loading indicator
-		_loadingIndicator = [[DACircularProgressView alloc] initWithFrame:CGRectMake(140.0f, 30.0f, 40.0f, 40.0f)];
-        _loadingIndicator.userInteractionEnabled = NO;
-        _loadingIndicator.thicknessRatio = 0.1;
-        _loadingIndicator.roundedCorners = NO;
-		_loadingIndicator.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin |
-        UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
-		[self addSubview:_loadingIndicator];
 
-        // Listen progress notifications
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(setProgressFromNotification:)
-                                                     name:MWPHOTO_PROGRESS_NOTIFICATION
-                                                   object:nil];
-        
 		// Setup
 		self.backgroundColor = [UIColor blackColor];
 		self.delegate = self;
@@ -145,7 +129,7 @@
         if (livePhoto) {
             [self displayLivePhoto];
         } else {
-            [self showLoadingIndicator];
+            [self prepareToShow];
         }
         
     } else {
@@ -155,8 +139,7 @@
         if (img) {
             [self displayImage];
         } else {
-            // Will be loading so show loading
-            [self showLoadingIndicator];
+            [self prepareToShow];
         }
     }
 }
@@ -174,10 +157,6 @@
 		// Get image from browser as it handles ordering of fetching
 		UIImage *img = [_photoBrowser imageForPhoto:_photo];
 		if (img) {
-			
-			// Hide indicator
-			[self hideLoadingIndicator];
-			
 			// Set image
 			_photoImageView.image = img;
 			_photoImageView.hidden = NO;
@@ -217,7 +196,6 @@
         PHLivePhoto *livePhoto = [_photoBrowser livePhotoForPhoto:_photo];
         
         if (livePhoto) {
-            [self hideLoadingIndicator];
             _livePhotoView.livePhoto = livePhoto;
             _livePhotoView.hidden = NO;
             if (self.showLivePhotoIcon) {
@@ -240,7 +218,6 @@
 
 // Image failed so just show black!
 - (void)displayImageFailure {
-    [self hideLoadingIndicator];
     _photoImageView.image = nil;
     
     // Show if image is not empty
@@ -268,29 +245,12 @@
     }
 }
 
-#pragma mark - Loading Progress
+#pragma mark -
 
-- (void)setProgressFromNotification:(NSNotification *)notification {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSDictionary *dict = [notification object];
-        id <MWPhoto> photoWithProgress = [dict objectForKey:@"photo"];
-        if (photoWithProgress == self.photo) {
-            float progress = [[dict valueForKey:@"progress"] floatValue];
-            _loadingIndicator.progress = MAX(MIN(1, progress), 0);
-        }
-    });
-}
-
-- (void)hideLoadingIndicator {
-    _loadingIndicator.hidden = YES;
-}
-
-- (void)showLoadingIndicator {
+- (void)prepareToShow {
     self.zoomScale = 0;
     self.minimumZoomScale = 0;
     self.maximumZoomScale = 0;
-    _loadingIndicator.progress = 0;
-    _loadingIndicator.hidden = NO;
     [self hideImageFailure];
 }
 
@@ -395,11 +355,6 @@
 	_tapView.frame = self.bounds;
 	
 	// Position indicators (centre does not seem to work!)
-	if (!_loadingIndicator.hidden)
-        _loadingIndicator.frame = CGRectMake(floorf((self.bounds.size.width - _loadingIndicator.frame.size.width) / 2.),
-                                         floorf((self.bounds.size.height - _loadingIndicator.frame.size.height) / 2),
-                                         _loadingIndicator.frame.size.width,
-                                         _loadingIndicator.frame.size.height);
 	if (_loadingError)
         _loadingError.frame = CGRectMake(floorf((self.bounds.size.width - _loadingError.frame.size.width) / 2.),
                                          floorf((self.bounds.size.height - _loadingError.frame.size.height) / 2),

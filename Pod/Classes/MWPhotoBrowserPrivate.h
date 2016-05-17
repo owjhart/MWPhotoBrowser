@@ -9,7 +9,6 @@
 #import <UIKit/UIKit.h>
 #import <MBProgressHUD/MBProgressHUD.h>
 #import <MediaPlayer/MediaPlayer.h>
-#import "MWGridViewController.h"
 #import "MWZoomingScrollView.h"
 
 // Declare private methods of browser
@@ -36,12 +35,7 @@
 	NSTimer *_controlVisibilityTimer;
 	UIBarButtonItem *_previousButton, *_nextButton, *_actionButton, *_doneButton;
     MBProgressHUD *_progressHUD;
-    
-    // Grid
-    MWGridViewController *_gridController;
-    UIBarButtonItem *_gridPreviousLeftNavItem;
-    UIBarButtonItem *_gridPreviousRightNavItem;
-    
+
     // Appearance
     BOOL _previousNavBarHidden;
     BOOL _previousNavBarTranslucent;
