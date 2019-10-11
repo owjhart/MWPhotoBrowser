@@ -41,14 +41,14 @@
 		_tapView = [[MWTapDetectingView alloc] initWithFrame:self.bounds];
 		_tapView.tapDelegate = self;
 		_tapView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-		_tapView.backgroundColor = [UIColor blackColor];
+		_tapView.backgroundColor = [UIColor systemBackgroundColor];
 		[self addSubview:_tapView];
 		
 		// Image view
 		_photoImageView = [[MWTapDetectingImageView alloc] initWithFrame:CGRectZero];
 		_photoImageView.tapDelegate = self;
 		_photoImageView.contentMode = UIViewContentModeCenter;
-		_photoImageView.backgroundColor = [UIColor blackColor];
+		_photoImageView.backgroundColor = [UIColor systemBackgroundColor];
 		[self addSubview:_photoImageView];
         
         // Live photo view
@@ -57,7 +57,7 @@
         _livePhotoView.hidden = YES;
         _livePhotoBadge.hidden = YES;
         _livePhotoView.contentMode = UIViewContentModeCenter;
-        _livePhotoView.backgroundColor = [UIColor blackColor];
+        _livePhotoView.backgroundColor = [UIColor systemBackgroundColor];
         [self addSubview:_livePhotoView];
         
         // Live photo badge
@@ -73,7 +73,7 @@
         [self addSubview:_livePhotoBadge];
 
 		// Setup
-		self.backgroundColor = [UIColor blackColor];
+		self.backgroundColor = [UIColor systemBackgroundColor];
 		self.delegate = self;
 		self.showsHorizontalScrollIndicator = NO;
 		self.showsVerticalScrollIndicator = NO;

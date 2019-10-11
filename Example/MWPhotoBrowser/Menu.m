@@ -180,7 +180,7 @@
     BOOL displayActionButton = YES;
     BOOL displaySelectionButtons = NO;
     BOOL displayNavArrows = NO;
-    BOOL enableGrid = YES;
+    BOOL enableGrid = NO;
     BOOL startOnGrid = NO;
     BOOL autoPlayOnAppear = NO;
 	switch (indexPath.row) {
@@ -238,7 +238,7 @@
             photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo4t" ofType:@"jpg"]]];
 			[thumbs addObject:photo];
             // Options
-            startOnGrid = YES;
+            startOnGrid = NO;
             displayNavArrows = YES;
 			break;
         }
@@ -265,7 +265,7 @@
             // Options
             displayActionButton = NO;
             displaySelectionButtons = YES;
-            startOnGrid = indexPath.row == 4;
+            startOnGrid = NO;
             enableGrid = NO;
 			break;
         }
@@ -1035,7 +1035,7 @@
             [photos addObject:photo];
             [thumbs addObject:[MWPhoto photoWithURL:[NSURL URLWithString:@"http://farm2.static.flickr.com/1235/1010416375_fe91e5ce22_q.jpg"]]];
             // Options
-            startOnGrid = YES;
+            startOnGrid = NO;
 			break;
         case 7: {
             
@@ -1081,7 +1081,7 @@
             [thumbs addObject:thumb];
             
             // Options
-            startOnGrid = YES;
+            startOnGrid = NO;
             break;
         }
 		case 9: {
@@ -1123,7 +1123,7 @@
             [thumbs addObject:photo];
             
             // Options
-            enableGrid = YES;
+            enableGrid = NO;
             displayNavArrows = YES;
             break;
         }
