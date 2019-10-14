@@ -10,7 +10,7 @@
 
 #import "MWPhotoProtocol.h"
 #import "MWPhotoBrowser.h"
-#import "NSString+MD5.h"
+#import "NSStringAdditions.h"
 
 //--------------------------------------------------------------------------------------------------
 #pragma mark - Class extension
@@ -157,8 +157,8 @@ didFinishDownloadingToURL:(NSURL *)location {
      attributes:nil
      error:nil];
     
-    NSString *imageFileName = [NSString stringWithFormat:@"%@.jpg", imageURL.absoluteString.md5];
-    NSString *movieFileName = [NSString stringWithFormat:@"%@.mov", movieURL.absoluteString.md5];
+    NSString *imageFileName = [NSString stringWithFormat:@"%@.jpg", imageURL.absoluteString.base64];
+    NSString *movieFileName = [NSString stringWithFormat:@"%@.mov", movieURL.absoluteString.base64];
     
     NSString *imageFilePath = [tmpDirPath stringByAppendingPathComponent:imageFileName];
     NSString *movieFilePath = [tmpDirPath stringByAppendingPathComponent:movieFileName];

@@ -61,14 +61,16 @@
         [self addSubview:_livePhotoView];
         
         // Live photo badge
-        _livePhotoBadge = [[UIImageView alloc] initWithImage:
-                           [PHLivePhotoView
-                            livePhotoBadgeImageWithOptions:PHLivePhotoBadgeOptionsOverContent]];
+        
+        _livePhotoBadge = [[UIImageView alloc] initWithImage:[[PHLivePhotoView
+        livePhotoBadgeImageWithOptions:PHLivePhotoBadgeOptionsOverContent] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]];
+        _livePhotoBadge.tintColor = [UIColor labelColor];
         _livePhotoBadge.hidden = YES;
         _livePhotoBadge.frame = CGRectMake(
-            8, 8 + 64, // margin left and top 8, below navigation bar
+            8, 8 + self.safeAreaInsets.top, // margin left and top 8, below navigation bar
             _livePhotoBadge.frame.size.width, _livePhotoBadge.frame.size.height
         );
+        
         _livePhotoBadge.translatesAutoresizingMaskIntoConstraints = NO;
         [self addSubview:_livePhotoBadge];
 
@@ -93,7 +95,6 @@
     [self hideImageFailure];
     self.photo = nil;
     self.captionView = nil;
-    self.selectedButton = nil;
     self.playButton = nil;
     _photoImageView.hidden = YES;
     _photoImageView.image = nil;
@@ -308,7 +309,8 @@
     
     // Calculate Max
     CGFloat maxScale = 3;
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
         // Let them go a bit bigger on a bigger screen!
         maxScale = 4;
     }
@@ -416,7 +418,7 @@
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     CGRect frame = _livePhotoBadge.frame;
-    frame.origin.y = scrollView.contentOffset.y + 8 + 64;
+    frame.origin.y = scrollView.contentOffset.y + 8 + self.safeAreaInsets.top;
     frame.origin.x = scrollView.contentOffset.x + 8;
     _livePhotoBadge.frame = frame;
 }

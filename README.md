@@ -7,11 +7,11 @@
 
 [![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=mwaterfall&url=https://github.com/mwaterfall/MWPhotoBrowser&title=MWPhotoBrowser&language=&tags=github&category=software)
 
-## A simple iOS photo and video browser with optional grid view, captions and selections, with remote Live Photos support.
+## A simple iOS photo, live photo and video browser with optional captions.
 
-MWPhotoBrowser can display one or more images or videos by providing either `UIImage` objects, `PHAsset` objects, URLs to Live Photo image and movie files, or URLs to library assets, web images/videos or local files. The photo browser handles the downloading and caching of photos from the web seamlessly. Photos can be zoomed and panned, and optional (customisable) captions can be displayed.
+MWPhotoBrowser can display one or more images or videos by providing either `UIImage` objects, URLs to Live Photo image and movie files, web images/videos or local files. The photo browser handles the downloading and caching of photos from the web seamlessly. Photos can be zoomed and panned, and optional (customisable) captions can be displayed.
 
-The browser can also be used to allow the user to select one or more photos using either the grid or main image view.
+Works on iOS 13+. All strings are localisable so they can be used in apps that support multiple languages.
 
 [![Alt][screenshot1_thumb]][screenshot1]    [![Alt][screenshot2_thumb]][screenshot2]    [![Alt][screenshot3_thumb]][screenshot3]    [![Alt][screenshot4_thumb]][screenshot4]    [![Alt][screenshot5_thumb]][screenshot5]    [![Alt][screenshot6_thumb]][screenshot6]
 
@@ -28,11 +28,9 @@ The browser can also be used to allow the user to select one or more photos usin
 [screenshot6_thumb]: https://raw.github.com/mwaterfall/MWPhotoBrowser/master/Screenshots/MWPhotoBrowser6t.png
 [screenshot6]: https://raw.github.com/mwaterfall/MWPhotoBrowser/master/Screenshots/MWPhotoBrowser6.png
 
-Works on iOS 7+. Live Photos is supported only on iOS 9+. All strings are localisable so they can be used in apps that support multiple languages.
-
 ## Usage
 
-MWPhotoBrowser is designed to be presented within a navigation controller. Simply set the delegate (which must conform to `MWPhotoBrowserDelegate`) and implement the 2 required delegate methods to provide the photo browser with the data in the form of `MWPhoto` objects. You can create an `MWPhoto` object by providing a `UIImage` object, `PHAsset` object, or a URL containing the path to a file, an image online or an asset from the asset library. Remote Live Photos are supported, in this case you have to provide remote URLs for image and video files.
+MWPhotoBrowser is designed to be presented within a navigation controller. Simply set the delegate (which must conform to `MWPhotoBrowserDelegate`) and implement the 2 required delegate methods to provide the photo browser with the data in the form of `MWPhoto` objects. You can create an `MWPhoto` object by providing a `UIImage` object, or a URL containing the path to a file, or an image online. Remote Live Photos are supported, in this case you have to provide remote URLs for image and video files.
 
 `MWPhoto` objects handle caching, file management, downloading of web images, and various optimisations for you. If however you would like to use your own data model to represent photos you can simply ensure your model conforms to the `MWPhoto` protocol. You can then handle the management of caching, downloads, etc, yourself. More information on this can be found in `MWPhotoProtocol.h`.
 
@@ -59,18 +57,11 @@ MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
 // Set options
 browser.displayActionButton = YES; // Show action button to allow sharing, copying, etc (defaults to YES)
 browser.displayNavArrows = NO; // Whether to display left and right nav arrows on toolbar (defaults to NO)
-browser.displaySelectionButtons = NO; // Whether selection buttons are shown on each image (defaults to NO)
 browser.zoomPhotosToFill = YES; // Images that almost fill the screen will be initially zoomed to fill (defaults to YES)
 browser.alwaysShowControls = NO; // Allows to control whether the bars and controls are always visible or whether they fade away to show the photo full (defaults to NO)
-browser.enableGrid = YES; // Whether to allow the viewing of all the photo thumbnails on a grid (defaults to YES)
-browser.startOnGrid = NO; // Whether to start on the grid of thumbnails instead of the first photo (defaults to NO)
 browser.autoPlayOnAppear = NO; // Auto-play first video
 browser.showLivePhotoIcon = YES; // Display a small icon indicating it is a Live Photo
 browser.previewLivePhotos = YES; // When a Live Photo is displayed, start a preview animation right after loading it
-
-// Customise selection images to change colours if required
-browser.customImageSelectedIconName = @"ImageSelected.png";
-browser.customImageSelectedSmallIconName = @"ImageSelectedSmall.png";
 
 // Optionally set the current visible photo before displaying
 [browser setCurrentPhotoIndex:1];
@@ -104,7 +95,7 @@ You can present the browser modally simply by wrapping it in a new navigation co
 
 ### Videos
 
-You can represent videos in MWPhoto objects by providing a standard MWPhoto image object with a `videoURL`. You can also use a `PHAsset` object or a URL to an assets library video.
+You can represent videos in MWPhoto objects by providing a standard MWPhoto image object with a `videoURL`.ph
 
 ```obj-c
 
@@ -112,31 +103,14 @@ You can represent videos in MWPhoto objects by providing a standard MWPhoto imag
 MWPhoto *video = [MWPhoto photoWithURL:[NSURL URLWithString:@"https://scontent.cdninstagram.com/hphotos-xpt1/t51.2885-15/e15/11192696_824079697688618_1761661_n.jpg"]];
 video.videoURL = [NSURL URLWithString:@"https://scontent.cdninstagram.com/hphotos-xpa1/t50.2886-16/11200303_1440130956287424_1714699187_n.mp4"];
 
-// Video with PHAsset
-MWPhoto *video = [MWPhoto photoWithAsset:asset targetSize:[UIScreen mainScreen].bounds.size]; // Example sizing
-
-// Video with ALAsset
-MWPhoto *video = [MWPhoto photoWithURL:asset.defaultRepresentation.url];
-if ([asset valueForProperty:ALAssetPropertyType] == ALAssetTypeVideo) {
-    photo.videoURL = asset.defaultRepresentation.url;
-}
-
 // Video with no poster photo
 MWPhoto *video = [MWPhoto videoWithURL:[NSURL URLWithString:@"https://scontent.cdninstagram.com/hphotos-xfa1/t50.2886-16/11237510_945154435524423_2137519922_n.mp4"]];
-
-// Video grid thumbnail
-MWPhoto *videoThumb = [MWPhoto photoWithURL:[NSURL URLWithString:@"https://scontent.cdninstagram.com/hphotos-xaf1/t51.2885-15/s150x150/e15/11240463_963135443745570_1519872157_n.jpg"]];
-videoThumb.isVideo = YES;
-
-// Video grid thumbnail for video with no poster photo
-MWPhoto *videoThumb = [MWPhoto new];
-videoThumb.isVideo = YES;
 
 ```
 
 ### Live Photos
 
-Live Photos are available on iOS 9+ through `PHLivePhoto` and `PHLivePhotoView` classes. `PHLivePhoto` needs an image file and a movie file (both previously generated on devices that can take Live Photos). `MWPhoto` supports Live Photos by its `+photoWithLivePhotoImageURL:movieURL:` method.
+Live Photos are available through `PHLivePhoto` and `PHLivePhotoView` classes. `PHLivePhoto` needs an image file and a movie file (both previously generated on devices that can take Live Photos). `MWPhoto` supports Live Photos by its `+photoWithLivePhotoImageURL:movieURL:` method.
 
 ```objc
 
@@ -148,18 +122,6 @@ MWPhoto *photo = [MWPhoto photoWithLivePhotoImageURL:imageURL movieURL:movieURL]
 photo.caption = @"A cool live photo";
 
 ```
-
-
-### Grid
-
-In order to properly show the grid of thumbnails, you must ensure the property `enableGrid` is set to `YES`, and implement the following delegate method:
-
-```obj-c
-- (id <MWPhoto>)photoBrowser:(MWPhotoBrowser *)photoBrowser thumbPhotoAtIndex:(NSUInteger)index;
-```
-
-The photo browser can also start on the grid by enabling the `startOnGrid` property.
-
 
 ### Actions
 
@@ -201,21 +163,6 @@ Example delegate method for custom caption view:
     MWPhoto *photo = [self.photos objectAtIndex:index];
     MyMWCaptionViewSubclass *captionView = [[MyMWCaptionViewSubclass alloc] initWithPhoto:photo];
     return captionView;
-}
-```
-
-
-#### Selections
-
-The photo browser can display check boxes allowing the user to select one or more of the photos. To use this feature, simply enable the `displaySelectionButtons` property, and implement the following delegate methods:
-
-```obj-c
-- (BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isPhotoSelectedAtIndex:(NSUInteger)index {
-    return [[_selections objectAtIndex:index] boolValue];
-}
-
-- (void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected {
-    [_selections replaceObjectAtIndex:index withObject:[NSNumber numberWithBool:selected]];
 }
 ```
 

@@ -17,7 +17,6 @@
 	// Data
     NSUInteger _photoCount;
     NSMutableArray *_photos;
-    NSMutableArray *_thumbPhotos;
 	NSArray *_fixedPhotosArray; // Provided via init
 	
 	// Views
@@ -40,7 +39,6 @@
     BOOL _previousNavBarHidden;
     BOOL _previousNavBarTranslucent;
     UIBarStyle _previousNavBarStyle;
-    UIStatusBarStyle _previousStatusBarStyle;
     UIColor *_previousNavBarTintColor;
     UIColor *_previousNavBarBarTintColor;
     UIBarButtonItem *_previousViewControllerBackButton;
@@ -54,7 +52,6 @@
     
     // Misc
     BOOL _hasBelongedToViewController;
-    BOOL _isVCBasedStatusBarAppearance;
     BOOL _statusBarShouldBeHidden;
     BOOL _displayActionButton;
     BOOL _leaveStatusBarAlone;
@@ -64,8 +61,6 @@
     BOOL _didSavePreviousStateOfNavBar;
     BOOL _skipNextPagingScrollViewPositioning;
     BOOL _viewHasAppearedInitially;
-    CGPoint _currentGridContentOffset;
-    
 }
 
 // Properties
@@ -95,19 +90,14 @@
 - (CGRect)frameForPageAtIndex:(NSUInteger)index;
 - (CGSize)contentSizeForPagingScrollView;
 - (CGPoint)contentOffsetForPageAtIndex:(NSUInteger)index;
-- (CGRect)frameForToolbarAtOrientation:(UIInterfaceOrientation)orientation;
+- (CGRect)frameForToolbar;
 - (CGRect)frameForCaptionView:(MWCaptionView *)captionView atIndex:(NSUInteger)index;
-- (CGRect)frameForSelectedButton:(UIButton *)selectedButton atIndex:(NSUInteger)index;
 
 // Navigation
 - (void)updateNavigation;
 - (void)jumpToPageAtIndex:(NSUInteger)index animated:(BOOL)animated;
 - (void)gotoPreviousPage;
 - (void)gotoNextPage;
-
-// Grid
-- (void)showGrid:(BOOL)animated;
-- (void)hideGrid;
 
 // Controls
 - (void)cancelControlHiding;
@@ -119,11 +109,8 @@
 // Data
 - (NSUInteger)numberOfPhotos;
 - (id<MWPhoto>)photoAtIndex:(NSUInteger)index;
-- (id<MWPhoto>)thumbPhotoAtIndex:(NSUInteger)index;
 - (UIImage *)imageForPhoto:(id<MWPhoto>)photo;
 - (PHLivePhoto *)livePhotoForPhoto:(id<MWPhoto>)photo;
-- (BOOL)photoIsSelectedAtIndex:(NSUInteger)index;
-- (void)setPhotoSelected:(BOOL)selected atIndex:(NSUInteger)index;
 - (void)loadAdjacentPhotosIfNecessary:(id<MWPhoto>)photo;
 - (void)releaseAllUnderlyingPhotos:(BOOL)preserveCurrent;
 
