@@ -24,6 +24,7 @@
     MWTapDetectingLivePhotoView *_livePhotoView;
     UIImageView *_loadingError;
     UIImageView *_livePhotoBadge;
+    CGFloat _maxSafeAreaInsetTop;
 }
 
 @end
@@ -66,12 +67,12 @@
         livePhotoBadgeImageWithOptions:PHLivePhotoBadgeOptionsOverContent] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]];
         _livePhotoBadge.tintColor = [UIColor labelColor];
         _livePhotoBadge.hidden = YES;
-        _livePhotoBadge.frame = CGRectMake(
-            8, 8 + self.safeAreaInsets.top, // margin left and top 8, below navigation bar
-            _livePhotoBadge.frame.size.width, _livePhotoBadge.frame.size.height
-        );
-        
+
+        _maxSafeAreaInsetTop = self.safeAreaInsets.top;
+
+        _livePhotoBadge.frame = [self frameForLivePhotoBadge];
         _livePhotoBadge.translatesAutoresizingMaskIntoConstraints = NO;
+        _livePhotoBadge.autoresizingMask = UIViewAutoresizingNone;
         [self addSubview:_livePhotoBadge];
 
 		// Setup
@@ -351,6 +352,14 @@
 
 #pragma mark - Layout
 
+- (CGRect)frameForLivePhotoBadge
+{
+    CGRect frame = _livePhotoBadge.frame;
+    frame.origin.y = self.contentOffset.y + 8 + _maxSafeAreaInsetTop;
+    frame.origin.x = self.contentOffset.x + 8;
+    return frame;
+}
+
 - (void)layoutSubviews {
 	
 	// Update tap view frame
@@ -363,9 +372,17 @@
                                          _loadingError.frame.size.width,
                                          _loadingError.frame.size.height);
 
+    if (self.safeAreaInsets.top > _maxSafeAreaInsetTop) {
+        _maxSafeAreaInsetTop = self.safeAreaInsets.top;
+    }
+
 	// Super
 	[super layoutSubviews];
-	
+
+    if (!self.tracking && !self.dragging && !self.decelerating && !self.zooming && !self.zoomBouncing) {
+        _livePhotoBadge.frame = [self frameForLivePhotoBadge];
+    }
+
     UIView *viewToCenter = self.photo.isLivePhoto ? _livePhotoView : _photoImageView;
     
     // Center the image as it becomes smaller than the size of the screen
@@ -417,10 +434,7 @@
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    CGRect frame = _livePhotoBadge.frame;
-    frame.origin.y = scrollView.contentOffset.y + 8 + self.safeAreaInsets.top;
-    frame.origin.x = scrollView.contentOffset.x + 8;
-    _livePhotoBadge.frame = frame;
+    _livePhotoBadge.frame = [self frameForLivePhotoBadge];
 }
 
 #pragma mark - Tap Detection
