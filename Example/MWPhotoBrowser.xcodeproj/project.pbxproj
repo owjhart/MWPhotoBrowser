@@ -376,7 +376,7 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-MWPhotoBrowser_Tests/Pods-MWPhotoBrowser_Tests-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/MWPhotoBrowser/MWPhotoBrowser.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/OHMWPhotoBrowser/MWPhotoBrowser.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
@@ -438,7 +438,7 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-MWPhotoBrowser_Example/Pods-MWPhotoBrowser_Example-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/MWPhotoBrowser/MWPhotoBrowser.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/OHMWPhotoBrowser/MWPhotoBrowser.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
