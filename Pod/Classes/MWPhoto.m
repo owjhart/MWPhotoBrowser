@@ -170,9 +170,8 @@
 #pragma mark - MWPhoto protocol methods for Live Photos
 
 - (void)loadUnderlyingLivePhotoAndNotify {
-    
-    BOOL isMainThread = [[NSThread currentThread] isMainThread];
-    NSAssert(isMainThread, @"This method must be called on the main thread.");
+
+    NSAssert([[NSThread currentThread] isMainThread], @"This method must be called on the main thread.");
     
     if (_loadingInProgress) {
         return;
