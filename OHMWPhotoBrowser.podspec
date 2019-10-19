@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   s.name = 'OHMWPhotoBrowser'
   s.version = '3.0.0'
   s.license = 'MIT'
-  s.summary = 'A simple iOS photo and video browser with optional captions.'
+  s.summary = 'A fork of MWPhotoBrowser. A simple iOS photo and video browser with optional captions for iOS 13+.'
   s.description = <<-DESCRIPTION
                   MWPhotoBrowser can display one or more images or videos by providing either UIImage
                   objects, web images/videos or local files.
@@ -20,8 +20,7 @@ Pod::Spec.new do |s|
   ]
 
   s.homepage = 'https://github.com/owjhart/MWPhotoBrowser'
-  s.author = { 'Michael Waterfall' => 'michaelwaterfall@gmail.com' }
-  s.social_media_url = 'https://twitter.com/mwaterfall'
+  s.author = { 'owjhart' => 'owenjhart@gmail.com' }
 
   s.source = {
     :git => 'https://github.com/owjhart/MWPhotoBrowser.git',
